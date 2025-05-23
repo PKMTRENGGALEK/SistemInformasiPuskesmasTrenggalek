@@ -1,502 +1,453 @@
 <!DOCTYPE html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistem Informasi Puskesmas Trenggalek</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css"
-      rel="stylesheet"
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistem Informasi Puskesmas Trenggalek</title>
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: url("https://images.pexels.com/photos/7723393/pexels-photo-7723393.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1") no-repeat center center fixed;
+      background-size: cover;
+/*      background-color: #e6f9f0;*/
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Efek hover tombol link */
+    .link-btn {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      cursor: grab;
+      user-select: none;
+      padding: 0.75rem 1rem;      /* dari py-4 px-6 jadi lebih kecil */
+      font-size: 0.875rem;       /* lebih kecil dari default */
+      border-radius: 0.75rem;    /* rounded-xl yang kira-kira 12px */
+
+    }
+
+    .link-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Style saat drag aktif */
+    .sortable-chosen {
+      cursor: grabbing !important;
+      opacity: 0.8;
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 0.2rem 0;
+      text-align: center;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.4);
+      font-weight: 500;
+      font-size: 0.775rem; /* kecil */
+      user-select: none;
+      width: 100%;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      z-index: 10;
+    }
+    /* Jaga warna tombol confirm Swal agar tidak berubah saat ditekan */
+    .swal2-confirm {
+      background-color: #e3342f !important; /* Merah */
+      color: white !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    .swal2-confirm:active {
+      background-color: #cc2a26 !important; /* Merah lebih gelap saat ditekan */
+      color: white !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Juga tombol cancel agar konsisten */
+    .swal2-cancel {
+      background-color: #6c757d !important; /* Abu */
+      color: white !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+    .swal2-cancel:active {
+      background-color: #5a6268 !important; /* Abu gelap saat ditekan */
+      color: white !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+
+
+  </style>
+</head>
+
+<body class="px-4 pt-24 pb-10 relative">
+
+
+<div class="absolute top-4 left-1/2 transform -translate-x-1/2 w-full max-w-sm flex items-center gap-2 px-4 z-50">
+  <div class="relative flex-1">
+    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+      <i class="fas fa-search"></i>
+    </span>
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Cari berkas..."
+      class="w-full pl-10 pr-3 py-1 rounded-lg text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-300"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-    />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-database-compat.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  </div>
+  <button id="toggleForm" class="text-white hover:text-yellow-300 text-xl flex-shrink-0" title="Tambah Link">
+    <i class="fas fa-gear"></i>
+  </button>
+</div>
 
-    <style>
-      body {
-        font-family: "Inter", sans-serif;
-        background-image: url("https://images.pexels.com/photos/7723393/pexels-photo-7723393.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1");
-        background-repeat: no-repeat;
-        background-position: center center;
-        background-attachment: fixed;
-        background-size: cover;
-        margin: 0;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
 
-      /* Efek hover tombol link */
-      .link-btn {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        cursor: grab;
-        user-select: none;
-        padding: 0.75rem 1rem; /* dari py-4 px-6 jadi lebih kecil */
-        font-size: 0.875rem; /* lebih kecil dari default */
-        border-radius: 0.75rem; /* rounded-xl yang kira-kira 12px */
-      }
 
-      .link-btn:hover {
-        transform: scale(1.05);
-        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
-      }
 
-      /* Style saat drag aktif */
-      .sortable-chosen {
-        cursor: grabbing !important;
-        opacity: 0.8;
-      }
 
-      footer {
-        margin-top: auto;
-        padding: 0.2rem 0;
-        text-align: center;
-        color: white;
-        background-color: rgba(0, 0, 0, 0.4);
-        font-weight: 500;
-        font-size: 0.775rem; /* kecil */
-        user-select: none;
-        width: 100%;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        z-index: 10;
-      }
-      /* Jaga warna tombol confirm Swal agar tidak berubah saat ditekan */
-      .swal2-confirm {
-        background-color: #e3342f !important; /* Merah */
-        color: white !important;
-        border: none !important;
-        box-shadow: none !important;
-      }
-
-      .swal2-confirm:active {
-        background-color: #cc2a26 !important; /* Merah lebih gelap saat ditekan */
-        color: white !important;
-        border: none !important;
-        box-shadow: none !important;
-      }
-
-      /* Juga tombol cancel agar konsisten */
-      .swal2-cancel {
-        background-color: #6c757d !important; /* Abu */
-        color: white !important;
-        border: none !important;
-        box-shadow: none !important;
-      }
-
-      .swal2-cancel:active {
-        background-color: #5a6268 !important; /* Abu gelap saat ditekan */
-        color: white !important;
-        border: none !important;
-        box-shadow: none !important;
-      }
-    </style>
-  </head>
-
-  <body class="px-4 pt-24 pb-10 relative">
-    <div
-      class="absolute top-4 left-1/2 transform -translate-x-1/2 w-full max-w-sm flex items-center gap-2 px-4 z-50"
-    >
-      <div class="relative flex-1">
-        <span
-          class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500"
-        >
-          <i class="fas fa-search"></i>
-        </span>
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Cari berkas..."
-          class="w-full pl-10 pr-3 py-1 rounded-lg text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-300"
-        />
-      </div>
-      <button
-        id="toggleForm"
-        class="text-white hover:text-yellow-300 text-xl flex-shrink-0"
-        title="Tambah Link"
-      >
-        <i class="fas fa-gear"></i>
-      </button>
+  <div class="w-full max-w-5xl mx-auto">
+    <div class="text-center mb-10 px-4 sm:px-0" data-aos="fade-down">
+      <img src="https://ugc.production.linktr.ee/7CWKLr3lS5yjL2KcuaN1_v5FPZ0zyDtb3QaXL?io=true&size=avatar-v3_0" alt="Logo Puskesmas" class="w-24 mx-auto mb-4 rounded-full shadow-2xl" />
+      <h4
+        class="text-2xl font-extrabold text-white underline underline-offset-8 decoration-4 decoration-yellow-300 shadow-xl bg-black/30 px-4 py-2 rounded-xl">
+        Sistem Informasi Puskesmas Trenggalek
+      </h4>
     </div>
 
-    <div class="w-full max-w-5xl mx-auto">
-      <div class="text-center mb-10 px-4 sm:px-0" data-aos="fade-down">
-        <img
-          src="https://ugc.production.linktr.ee/7CWKLr3lS5yjL2KcuaN1_v5FPZ0zyDtb3QaXL?io=true&size=avatar-v3_0"
-          alt="Logo Puskesmas"
-          class="w-24 mx-auto mb-4 rounded-full shadow-2xl"
-        />
-        <h4
-          class="text-2xl font-extrabold text-white underline underline-offset-8 decoration-4 decoration-yellow-300 shadow-xl bg-black/30 px-4 py-2 rounded-xl"
-        >
-          Sistem Informasi Puskesmas Trenggalek
-        </h4>
-      </div>
-
-      <div
-        id="formModal"
-        class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center hidden z-50"
-      >
-        <form
-          id="linkForm"
-          class="bg-white/70 backdrop-blur-md shadow-xl rounded-xl p-6 w-full max-w-md"
-          data-aos="zoom-in"
-        >
-          <h2 class="text-xl font-bold mb-4 text-center text-blue-700">
-            Tambah Link Berkas
-          </h2>
-          <input
-            type="text"
-            id="linkName"
-            placeholder="Nama Berkas"
-            class="w-full px-4 py-2 mb-3 rounded border border-gray-300 focus:outline-blue-400"
-            required
-          />
-          <input
-            type="url"
-            id="linkURL"
-            placeholder="https://contoh.com/berkas.pdf"
-            class="w-full px-4 py-2 mb-4 rounded border border-gray-300 focus:outline-blue-400"
-            required
-          />
-          <div class="flex justify-end gap-2">
-            <button
-              type="button"
-              id="closeForm"
-              class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition"
-            >
-              Tambah
-            </button>
-          </div>
-        </form>
-      </div>
-      <div
-        id="adminPanelModal"
-        class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center hidden z-50"
-      >
-        <div
-          class="bg-white/90 backdrop-blur-lg w-full max-w-3xl rounded-xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]"
-        >
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold text-blue-800">Panel Admin</h2>
-            <button
-              id="closeAdminPanel"
-              class="text-red-500 hover:text-red-700 text-lg"
-            >
-              &times;
-            </button>
-          </div>
-          <table
-            class="w-full text-sm text-left border border-gray-300 rounded shadow-md overflow-hidden"
-          >
-            <thead class="bg-blue-100">
-              <tr>
-                <th class="py-2 px-3">Nama</th>
-                <th class="py-2 px-3">URL</th>
-                <th class="py-2 px-3">Aksi</th>
-              </tr>
-            </thead>
-            <tbody
-              id="adminTableBody"
-              class="bg-white divide-y divide-gray-200"
-            >
-              <!-- Isi link akan muncul di sini -->
-            </tbody>
-          </table>
+    <div id="formModal" class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center hidden z-50">
+      <form id="linkForm" class="bg-white/70 backdrop-blur-md shadow-xl rounded-xl p-6 w-full max-w-md" data-aos="zoom-in">
+        <h2 class="text-xl font-bold mb-4 text-center text-blue-700">Tambah Link Berkas</h2>
+        <input type="text" id="linkName" placeholder="Nama Berkas"
+          class="w-full px-4 py-2 mb-3 rounded border border-gray-300 focus:outline-blue-400" required />
+        <input type="url" id="linkURL" placeholder="https://contoh.com/berkas.pdf"
+          class="w-full px-4 py-2 mb-4 rounded border border-gray-300 focus:outline-blue-400" required />
+        <div class="flex justify-end gap-2">
+          <button type="button" id="closeForm" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Batal</button>
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition">Tambah</button>
         </div>
-      </div>
-
-      <div
-        id="linkContainer"
-        class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center"
-        data-aos="fade-up"
-      >
-        <!-- Link akan ditambahkan di sini -->
+      </form>
+    </div>
+    <div id="adminPanelModal" class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center hidden z-50">
+      <div class="bg-white/90 backdrop-blur-lg w-full max-w-3xl rounded-xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-blue-800">Panel Admin</h2>
+          <button id="closeAdminPanel" class="text-red-500 hover:text-red-700 text-lg">&times;</button>
+        </div>
+        <table class="w-full text-sm text-left border border-gray-300 rounded shadow-md overflow-hidden">
+          <thead class="bg-blue-100">
+            <tr>
+              <th class="py-2 px-3">Nama</th>
+              <th class="py-2 px-3">URL</th>
+              <th class="py-2 px-3">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody" class="bg-white divide-y divide-gray-200">
+            <!-- Isi link akan muncul di sini -->
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <footer>
-      made by
-      <span
-        id="adminPanelBtn"
-        class="underline cursor-pointer hover:text-yellow-300"
-        >@yoga</span
-      >
-      || 2025
-    </footer>
+    <div id="linkContainer" class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center" data-aos="fade-up">
+      <!-- Link akan ditambahkan di sini -->
+    </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-    <script>
-      AOS.init();
+  <footer>
+    made by <span id="adminPanelBtn" class="underline cursor-pointer hover:text-yellow-300">@yoga</span> || 2025
+  </footer>
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyCfqCoDQmK6FInZUxROQv6JCFzoMnB3jSU",
-        authDomain: "sipuskesmastrenggalek.firebaseapp.com",
-        projectId: "sipuskesmastrenggalek",
-        storageBucket: "sipuskesmastrenggalek.appspot.com",
-        messagingSenderId: "213451187426",
-        appId: "1:213451187426:web:3ef32e7d371aa5be562abb",
-        measurementId: "G-WQPTCK3ZD1",
-      };
 
-      firebase.initializeApp(firebaseConfig);
-      const database = firebase.database();
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    AOS.init();
 
-      const form = document.getElementById("linkForm");
-      const container = document.getElementById("linkContainer");
-      const toggleForm = document.getElementById("toggleForm");
-      const formModal = document.getElementById("formModal");
-      const closeForm = document.getElementById("closeForm");
+    const firebaseConfig = {
+      apiKey: "AIzaSyCueYkqTYnoZojGe0T0j1dHXmXsxjlxqMU",
+      authDomain: "siptglk.firebaseapp.com",
+      databaseURL: "https://siptglk-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "siptglk",
+      storageBucket: "siptglk.firebasestorage.app",
+      messagingSenderId: "872602144529",
+      appId: "1:872602144529:web:1b1d467ce763ab596106b0",
+      measurementId: "G-0DLDFJJGLG"
+    };
 
-      const adminPanelBtn = document.getElementById("adminPanelBtn");
-      const adminPanelModal = document.getElementById("adminPanelModal");
-      const closeAdminPanel = document.getElementById("closeAdminPanel");
-      const adminTableBody = document.getElementById("adminTableBody");
-      const searchInput = document.getElementById("searchInput");
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
 
-      let linksData = [];
+    const form = document.getElementById('linkForm');
+    const container = document.getElementById('linkContainer');
+    const toggleForm = document.getElementById('toggleForm');
+    const formModal = document.getElementById('formModal');
+    const closeForm = document.getElementById('closeForm');
 
-      toggleForm.addEventListener("click", () => {
-        formModal.classList.remove("hidden");
+    toggleForm.addEventListener('click', () => {
+      formModal.classList.remove('hidden');
+    });
+
+    closeForm.addEventListener('click', () => {
+      formModal.classList.add('hidden');
+    });
+
+    // Array untuk menyimpan data link dengan key dari Firebase agar bisa update urutan
+    let linksData = [];
+
+    function renderLinks(links) {
+      container.innerHTML = '';
+      const colors = ['bg-blue-500', 'bg-green-500', 'bg-pink-500', 'bg-yellow-500', 'bg-purple-500', 'bg-indigo-500'];
+      links.forEach((link, i) => {
+        const linkButton = document.createElement('a');
+        linkButton.href = link.url;
+        linkButton.target = '_blank';
+        linkButton.className = `link-btn w-full text-center py-3 px-4  text-white font-semibold rounded-xl shadow-xl hover:opacity-90 transition-all ${colors[i % colors.length]}`;
+        linkButton.setAttribute('data-aos', 'fade-up');
+        linkButton.textContent = link.name;
+        linkButton.dataset.key = link.key; // simpan key firebase untuk update nanti
+        container.appendChild(linkButton);
       });
+      AOS.refresh();
 
-      closeForm.addEventListener("click", () => {
-        formModal.classList.add("hidden");
+      // Inisialisasi sortable
+      if (window.sortableInstance) window.sortableInstance.destroy();
+      window.sortableInstance = Sortable.create(container, {
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        onEnd: saveOrderToFirebase,
       });
+    }
 
-      adminPanelBtn.addEventListener("click", () => {
-        renderAdminTable();
-        adminPanelModal.classList.remove("hidden");
+    function fetchLinks() {
+      database.ref('links').once('value', snapshot => {
+        const data = snapshot.val();
+        // data = { key1: {name,url}, key2: {...} }
+        if (!data) {
+          linksData = [];
+          renderLinks(linksData);
+          return;
+        }
+        linksData = Object.entries(data).map(([key, val]) => ({ key, ...val }));
+        // Sort by a stored "order" if ada, kalau gak ada berdasarkan urutan awal
+        linksData.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        renderLinks(linksData);
       });
+    }
+    const searchInput = document.getElementById('searchInput');
 
-      closeAdminPanel.addEventListener("click", () => {
-        adminPanelModal.classList.add("hidden");
-      });
-
-      searchInput.addEventListener("input", () => {
+      searchInput.addEventListener('input', () => {
         const keyword = searchInput.value.toLowerCase();
-        const filteredLinks = linksData.filter((link) =>
+        const filteredLinks = linksData.filter(link =>
           link.name.toLowerCase().includes(keyword)
         );
         renderLinks(filteredLinks);
       });
 
-      function isValidURL(url) {
-        return /^https?:\/\/.+\..+/.test(url);
-      }
+    function saveOrderToFirebase(evt) {
+      // Ambil urutan terbaru dari DOM
+      const orderedKeys = [...container.children].map(child => child.dataset.key);
 
-      function showLoader(show = true) {
-        container.innerHTML = show
-          ? '<div class="text-center py-10 text-gray-500">Memuat data...</div>'
-          : "";
-      }
-
-      async function fetchLinks() {
-        showLoader(true);
-        const snapshot = await database.ref("links").once("value");
-        const data = snapshot.val();
-
-        linksData = data
-          ? Object.entries(data).map(([key, val]) => ({ key, ...val }))
-          : [];
-
-        linksData.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        renderLinks(linksData);
-      }
-
-      function renderLinks(links) {
-        container.innerHTML = "";
-        const colors = [
-          "bg-blue-500",
-          "bg-green-500",
-          "bg-pink-500",
-          "bg-yellow-500",
-          "bg-purple-500",
-          "bg-indigo-500",
-        ];
-
-        links.forEach((link, i) => {
-          const linkButton = document.createElement("a");
-          linkButton.href = link.url;
-          linkButton.target = "_blank";
-          linkButton.className = `link-btn w-full text-center py-3 px-4 text-white font-semibold rounded-xl shadow-xl hover:opacity-90 transition-all ${
-            colors[i % colors.length]
-          }`;
-          linkButton.setAttribute("data-aos", "fade-up");
-          linkButton.textContent = `🔗 ${link.name}`;
-          linkButton.dataset.key = link.key;
-          container.appendChild(linkButton);
-        });
-
-        AOS.refresh();
-
-        if (window.sortableInstance) window.sortableInstance.destroy();
-        window.sortableInstance = Sortable.create(container, {
-          animation: 150,
-          ghostClass: "sortable-ghost",
-          onEnd: saveOrderToFirebase,
-        });
-      }
-
-      async function saveOrderToFirebase() {
-        const orderedKeys = [...container.children].map(
-          (child) => child.dataset.key
-        );
-
-        orderedKeys.forEach((key, idx) => {
-          const link = linksData.find((l) => l.key === key);
-          if (link) link.order = idx;
-        });
-
-        for (const key of orderedKeys) {
-          const link = linksData.find((l) => l.key === key);
-          if (link) {
-            await database.ref(`links/${key}`).update({ order: link.order });
-          }
-        }
-
-        Swal.fire({
-          icon: "success",
-          title: "Urutan tersimpan",
-          timer: 1000,
-          showConfirmButton: false,
-        });
-      }
-
-      form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const name = document.getElementById("linkName").value.trim();
-        const url = document.getElementById("linkURL").value.trim();
-
-        if (!name || !url) return;
-        if (!isValidURL(url)) {
-          Swal.fire(
-            "URL tidak valid",
-            "Pastikan diawali dengan http:// atau https://",
-            "error"
-          );
-          return;
-        }
-
-        if (
-          linksData.some(
-            (link) => link.name.toLowerCase() === name.toLowerCase()
-          )
-        ) {
-          Swal.fire(
-            "Nama sudah ada",
-            "Gunakan nama lain untuk membedakan",
-            "warning"
-          );
-          return;
-        }
-
-        const maxOrder = linksData.length
-          ? Math.max(...linksData.map((l) => l.order ?? 0))
-          : -1;
-
-        const newLinkRef = database.ref("links").push();
-        await newLinkRef.set({ name, url, order: maxOrder + 1 });
-
-        Swal.fire({
-          icon: "success",
-          title: "Berhasil",
-          text: "Link ditambahkan",
-          timer: 1500,
-          showConfirmButton: false,
-        });
-
-        form.reset();
-        formModal.classList.add("hidden");
-        fetchLinks();
+      // Update order di linksData sesuai urutan baru
+      orderedKeys.forEach((key, idx) => {
+        const link = linksData.find(l => l.key === key);
+        if (link) link.order = idx;
       });
 
-      function renderAdminTable() {
-        adminTableBody.innerHTML = "";
-        linksData.forEach((link) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td class="px-3 py-2">${link.name}</td>
-            <td class="px-3 py-2 max-w-[150px] truncate text-blue-600 underline">
-              <a href="${link.url}" target="_blank">${link.url}</a>
-            </td>
-            <td class="px-3 py-2 space-x-2">
-              <button class="text-yellow-500 hover:text-yellow-700 text-sm" onclick="editLink('${link.key}')">Edit</button>
-              <button class="text-red-500 hover:text-red-700 text-sm" onclick="deleteLink('${link.key}')">Hapus</button>
-            </td>
-          `;
-          adminTableBody.appendChild(row);
-        });
-      }
-
-      async function deleteLink(key) {
-        const confirm = await Swal.fire({
-          title: "Hapus link ini?",
-          text: "Tindakan ini tidak bisa dibatalkan!",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonText: "Ya, hapus",
-          cancelButtonText: "Batal",
-        });
-
-        if (confirm.isConfirmed) {
-          try {
-            await database.ref(`links/${key}`).remove();
-            Swal.fire("Terhapus!", "Link berhasil dihapus.", "success");
-            await fetchLinks();
-            renderAdminTable();
-          } catch (err) {
-            Swal.fire("Gagal!", "Terjadi kesalahan saat menghapus.", "error");
-          }
+      // Simpan ulang urutan ke Firebase
+      orderedKeys.forEach(key => {
+        const link = linksData.find(l => l.key === key);
+        if (link) {
+          database.ref(`links/${key}`).update({ order: link.order });
         }
+      });
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Urutan tersimpan',
+        timer: 1000,
+        showConfirmButton: false
+      });
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const name = document.getElementById('linkName').value.trim();
+      const url = document.getElementById('linkURL').value.trim();
+      if (!name || !url) return;
+
+      // Cari nilai order max + 1
+      let maxOrder = -1;
+      if (linksData.length) {
+        maxOrder = Math.max(...linksData.map(l => l.order ?? 0));
       }
 
-      async function editLink(key) {
-        const link = linksData.find((l) => l.key === key);
-        if (!link) return;
-
-        const result = await Swal.fire({
-          title: "Edit Link",
-          html: `
-            <input id="editName" class="swal2-input" placeholder="Nama" value="${link.name}">
-            <input id="editURL" class="swal2-input" placeholder="URL" value="${link.url}">
-          `,
-          confirmButtonText: "Simpan",
-          showCancelButton: true,
-          preConfirm: () => {
-            const name = document.getElementById("editName").value.trim();
-            const url = document.getElementById("editURL").value.trim();
-            if (!name || !url)
-              return Swal.showValidationMessage("Semua kolom harus diisi");
-            if (!isValidURL(url))
-              return Swal.showValidationMessage("URL tidak valid");
-            return { name, url };
-          },
-        });
-
-        if (result.isConfirmed) {
-          await database.ref(`links/${key}`).update(result.value);
-          Swal.fire("Tersimpan!", "Link berhasil diperbarui.", "success");
+      const newLinkRef = database.ref('links').push();
+      newLinkRef.set({ name, url, order: maxOrder + 1 }, (error) => {
+        if (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: 'Data gagal disimpan. Silakan coba lagi.'
+          });
+        } else {
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: 'Data berhasil ditambahkan!',
+            timer: 1500,
+            showConfirmButton: false
+          });
           fetchLinks();
-          renderAdminTable();
+          form.reset();
+          formModal.classList.add('hidden');
         }
-      }
+      });
+    });
 
-      fetchLinks();
-    </script>
-  </body>
+    fetchLinks();
+    const adminPanelBtn = document.getElementById('adminPanelBtn');
+const adminPanelModal = document.getElementById('adminPanelModal');
+const closeAdminPanel = document.getElementById('closeAdminPanel');
+const adminTableBody = document.getElementById('adminTableBody');
+
+adminPanelBtn.addEventListener('click', () => {
+  renderAdminTable();
+  adminPanelModal.classList.remove('hidden');
+});
+
+closeAdminPanel.addEventListener('click', () => {
+  adminPanelModal.classList.add('hidden');
+});
+
+function renderAdminTable() {
+  adminTableBody.innerHTML = '';
+  linksData.forEach(link => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="px-3 py-2">${link.name}</td>
+      <td class="px-3 py-2"><a href="${link.url}" class="text-blue-600 underline" target="_blank">${link.url}</a></td>
+      <td class="px-3 py-2 space-x-2">
+        <button class="text-yellow-500 hover:text-yellow-700 text-sm" onclick="editLink('${link.key}')">Edit</button>
+        <button class="text-red-500 hover:text-red-700 text-sm" onclick="deleteLink('${link.key}')">Hapus</button>
+      </td>
+    `;
+    adminTableBody.appendChild(row);
+  });
+}
+
+function deleteLink(key) {
+  Swal.fire({
+    title: 'Hapus link ini?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, hapus',
+    cancelButtonText: 'Batal',
+  }).then(result => {
+    if (result.isConfirmed) {
+      database.ref(`links/${key}`).remove().then(() => {
+        Swal.fire('Dihapus!', 'Link telah dihapus.', 'success');
+        fetchLinks().then(() => {
+          renderAdminTable(); // ✅ Baru render setelah data ter-update
+        });
+      });
+
+    }
+  });
+}
+
+function editLink(key) {
+  const link = linksData.find(l => l.key === key);
+  if (!link) return;
+
+  Swal.fire({
+    title: 'Edit Link',
+    html: `
+      <input id="editName" class="swal2-input" placeholder="Nama Berkas" value="${link.name}">
+      <input id="editURL" class="swal2-input" placeholder="URL" value="${link.url}">
+    `,
+    confirmButtonText: 'Simpan',
+    showCancelButton: true,
+    preConfirm: () => {
+      const name = document.getElementById('editName').value.trim();
+      const url = document.getElementById('editURL').value.trim();
+      if (!name || !url) {
+        Swal.showValidationMessage('Semua kolom harus diisi');
+        return false;
+      }
+      return { name, url };
+    }
+  }).then(result => {
+    if (result.isConfirmed) {
+      database.ref(`links/${key}`).update(result.value).then(() => {
+        Swal.fire('Tersimpan!', 'Link berhasil diperbarui.', 'success');
+        fetchLinks();
+        renderAdminTable(); // perbarui tabel admin
+      });
+    }
+  });
+}
+function renderAdminTable() {
+  adminTableBody.innerHTML = '';
+  linksData.forEach(link => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td class="py-2 px-3">${link.name}</td>
+      <td class="py-2 px-3 text-blue-700 underline truncate max-w-[120px]">
+        <a href="${link.url}" target="_blank">${link.url}</a>
+      </td>
+      <td class="py-2 px-3 space-x-2">
+        <button class="text-red-500 hover:text-red-700" onclick="deleteLink('${link.key}')">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    `;
+    adminTableBody.appendChild(row);
+  });
+}
+
+function deleteLink(key) {
+  Swal.fire({
+    title: 'Yakin ingin menghapus?',
+    text: 'Tindakan ini tidak bisa dibatalkan!',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ya, hapus!',
+    cancelButtonText: 'Batal',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      database.ref(`links/${key}`).remove()
+        .then(() => {
+          Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
+          fetchLinks(); // Perbarui tampilan
+        })
+        .catch(() => {
+          Swal.fire('Gagal!', 'Gagal menghapus data.', 'error');
+        });
+    }
+  });
+}
+
+// Tutup modal admin saat klik tombol tutup
+closeAdminPanel.addEventListener('click', () => {
+  adminPanelModal.classList.add('hidden');
+});
+
+
+  </script>
+</body>
+
 </html>
